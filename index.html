@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0e1012">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Hearthwatch</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <header id="appbar">
+    <div class="bar-title" id="barTitle">Home</div>
+    <div class="bar-sub" id="barSub"></div>
+  </header>
+  <main id="screen"></main>
+  <nav id="tabs">
+    <button class="tab" data-tab="home"><span class="ico" aria-hidden="true">&#9737;</span>Home</button>
+    <button class="tab" data-tab="activity"><span class="ico" aria-hidden="true">&#9776;</span>Activity</button>
+    <button class="tab" data-tab="cameras"><span class="ico" aria-hidden="true">&#9635;</span>Cameras</button>
+    <button class="tab" data-tab="settings"><span class="ico" aria-hidden="true">&#9881;</span>Settings</button>
+  </nav>
+</div>
+<div id="sheet" class="sheet" hidden><div class="sheet-card" id="sheetCard"></div></div>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
