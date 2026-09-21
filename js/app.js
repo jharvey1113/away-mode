@@ -4,9 +4,25 @@ const zoneById = id => HOUSE.zones.find(z => z.id === id);
 
 let S, tab = 'home', busy = false;
 
+/* Away Mode is checked, not played. A night cannot be set again until a real
+   window has passed, and Maya answers in real minutes rather than instantly.
+   ?dev=1 collapses both so the whole arc can be walked in a few minutes. */
+const DEV = /[?&]dev=1/.test(location.search);
+const MINUTE = DEV ? 700 : 60000;
+const NIGHT_COOLDOWN = DEV ? 12000 : 4 * 60 * 60 * 1000;
+
+function nameFill(text){ return (text || '').replace(/\{name\}/g, S && S.name ? S.name : 'you'); }
+
+function untilText(ms){
+  const m = Math.max(0, Math.ceil(ms / 60000));
+  if(m < 60) return m + (m === 1 ? ' minute' : ' minutes');
+  const h = Math.floor(m / 60), r = m % 60;
+  return h + 'h' + (r ? ' ' + r + 'm' : '');
+}
+
 function fresh(){
-  return { night:1, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
-           lastSummary:null, camIndex:0, camSwitches:0 };
+  return { night:1, name:'', armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
+           lastSummary:null, camIndex:0, camSwitches:0, nextNightAt:0 };
 }
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
 function load(){
@@ -153,15 +169,21 @@ function screenHome(){
   wrap.appendChild(sens);
 
   const done = S.night > NIGHTS.length;
-  const go = el('button', 'btn primary', done ? 'No further nights scheduled' : 'Set away mode');
-  go.disabled = done;
+  const waiting = !done && Date.now() < (S.nextNightAt || 0);
+  const go = el('button', 'btn primary',
+    done ? 'No further nights scheduled'
+         : waiting ? 'Next window opens in ' + untilText(S.nextNightAt - Date.now())
+                   : 'Set away mode');
+  go.disabled = done || waiting;
   go.addEventListener('click', confirmAway);
   wrap.appendChild(go);
 
   const hint = el('div', 'dim');
   hint.style.fontSize = '12px';
   hint.style.textAlign = 'center';
-  hint.textContent = 'Away mode disables live view until you return.';
+  hint.textContent = waiting
+    ? 'Away mode runs overnight. The next monitoring window opens this evening.'
+    : 'Away mode disables live view until you return.';
   wrap.appendChild(hint);
   return wrap;
 }
@@ -301,7 +323,7 @@ function screenSettings(){
   rows.appendChild(mk('Property', HOUSE.address));
   rows.appendChild(mk('Plan', 'Hearthwatch Basic · 3 active sensors'));
   rows.appendChild(mk('Devices paired', String(HOUSE.zones.length + (S.flags.extraRoom ? 1 : 0))));
-  rows.appendChild(mk('Account holder', '—'));
+  rows.appendChild(mk('Account holder', S.name || '—'));
   c.appendChild(rows);
   wrap.appendChild(c);
 
@@ -318,6 +340,59 @@ function screenSettings(){
   dp.appendChild(b);
   d.appendChild(dp);
   wrap.appendChild(d);
+  return wrap;
+}
+
+/* ---------- first launch ---------- */
+
+function screenSetup(){
+  const wrap = document.createDocumentFragment();
+  const c = el('div', 'card');
+  const p = el('div', 'card-pad');
+  p.appendChild(el('div', 'setup-h', 'Finish setting up'));
+  p.appendChild(el('div', 'muted', 'This name appears on the account and on alerts sent from the property.'));
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.id = 'nameInput';
+  inp.className = 'field';
+  inp.maxLength = 24;
+  inp.autocomplete = 'off';
+  inp.placeholder = 'Account holder';
+  inp.setAttribute('aria-label', 'Account holder name');
+  p.appendChild(inp);
+
+  const err = el('div', 'fielderr');
+  err.id = 'nameErr';
+  err.hidden = true;
+  p.appendChild(err);
+
+  const go = el('button', 'btn primary', 'Continue');
+  go.style.marginTop = '14px';
+  go.addEventListener('click', () => {
+    const v = inp.value.trim();
+    if(!v){
+      err.textContent = 'Enter a name to continue.';
+      err.hidden = false;
+      inp.focus();
+      return;
+    }
+    S.name = v;
+    save();
+    render();
+  });
+  inp.addEventListener('input', () => { err.hidden = true; });
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter') go.click(); });
+  p.appendChild(go);
+
+  const note = el('div', 'dim');
+  note.style.fontSize = '12px';
+  note.style.marginTop = '12px';
+  note.textContent = 'Stored on this device only.';
+  p.appendChild(note);
+
+  c.appendChild(p);
+  wrap.appendChild(c);
   return wrap;
 }
 
@@ -368,6 +443,7 @@ function resolveNight(){
   S.lastSummary = { date:n.date, count:entries.length, unmonitored, note:MORNINGS[n.day] || '' };
   S.night++;
   S.armed = [];
+  S.nextNightAt = Date.now() + NIGHT_COOLDOWN;
   save();
 }
 
@@ -404,6 +480,18 @@ function closeSheet(){ document.getElementById('sheet').hidden = true; }
 const TITLES = { home:'Home', activity:'Activity', cameras:'Cameras', messages:'Messages', settings:'Settings' };
 
 function render(){
+  const setup = !S.name;
+  document.getElementById('tabs').hidden = setup;
+  if(setup){
+    document.getElementById('barTitle').textContent = 'Hearthwatch';
+    document.getElementById('barSub').textContent = HOUSE.address;
+    const scr0 = document.getElementById('screen');
+    scr0.innerHTML = '';
+    scr0.appendChild(screenSetup());
+    const f = document.getElementById('nameInput');
+    if(f) f.focus();
+    return;
+  }
   document.getElementById('barTitle').textContent = TITLES[tab];
   const sub = document.getElementById('barSub');
   if(tab === 'home') sub.textContent = S.night > NIGHTS.length ? HOUSE.address : 'Night ' + S.night + ' · ' + NIGHTS[S.night - 1].date;

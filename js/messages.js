@@ -13,34 +13,34 @@ const CONTACT = { name: 'Maya R.', sub: 'Property owner' };
 
 const MSG = {
   1: [
-    { from:'maya', t:'21:12', text:'Sorry to bug you again. Camera says motion out front. Can you check?' },
+    { from:'maya', mins:1, t:'21:12', text:'Sorry to bug you again. Camera says motion out front. Can you check?' },
     { choices:['Package.', 'Nothing there.'] },
-    { from:'maya', t:'21:13', text:'👍 Thanks. That’s probably Daniel’s.' },
-    { from:'maya', t:'21:24', text:'Kitchen one went off now.' },
-    { from:'maya', t:'21:24', text:'This system was such a good investment lol' },
+    { from:'maya', mins:2, t:'21:13', text:'👍 Thanks. That’s probably Daniel’s.' },
+    { from:'maya', mins:11, t:'21:24', text:'Kitchen one went off now.' },
+    { from:'maya', mins:1, t:'21:24', text:'This system was such a good investment lol' },
     { choices:['ok', 'I’ll keep an eye on it'] }
   ],
 
   2: [
-    { from:'maya', t:'08:02', text:'Anything overnight?' },
+    { from:'maya', mins:4, t:'08:02', text:'Anything overnight?' },
     { choices:['A couple of motion alerts.', 'Nothing.'] },
-    { from:'maya', t:'08:05', text:'Yeah it does that when the heat kicks on. Sorry.' }
+    { from:'maya', mins:3, t:'08:05', text:'Yeah it does that when the heat kicks on. Sorry.' }
   ],
 
   3: [
     { choices:['Is someone checking the house tonight?'] },
-    { from:'maya', t:'22:31', text:'No. Why?', wait:2600 },
+    { from:'maya', mins:9, t:'22:31', text:'No. Why?', wait:2600 },
     { choices:['The kitchen cabinet was open.', 'Nothing. Forget it.'] },
-    { from:'maya', t:'22:34', text:'Daniel probably left it. He does that.' }
+    { from:'maya', mins:3, t:'22:34', text:'Daniel probably left it. He does that.' }
   ],
 
   4: [
     { choices:['What’s through the door in the utility room?'] },
-    { from:'maya', t:'23:48', text:'The garage.', wait:1800 },
-    { from:'maya', t:'23:48', text:'Wait which door?', wait:2200 },
+    { from:'maya', mins:6, t:'23:48', text:'The garage.', wait:1800 },
+    { from:'maya', mins:2, t:'23:48', text:'Wait which door?', wait:2200 },
     { choices:['[Send photo — utility 03:12]'] },
-    { from:'maya', text:'', wait:5200, stutter:true },
-    { from:'maya', t:'23:51', text:'There isn’t a door there.' }
+    { from:'maya', mins:14, text:'', wait:5200, stutter:true },
+    { from:'maya', mins:4, t:'23:51', text:'There isn’t a door there.' }
   ]
 };
 
@@ -49,13 +49,20 @@ const MSG = {
 let msgBusy = false;
 
 function msgState(){
-  if(!S.msg) S.msg = { night:0, idx:0, log:[] };
+  if(!S.msg) S.msg = { night:0, idx:0, log:[], dueAt:0 };
   return S.msg;
+}
+
+/* How long Maya takes to answer, in real minutes. She is a person with a life,
+   not a chatbot, and the wait is most of what sells her. */
+function beatDelay(beat){
+  const mins = beat.mins != null ? beat.mins : 6;
+  return mins * MINUTE;
 }
 
 function bubble(m){
   const row = el('div', 'mrow ' + (m.from === 'you' ? 'me' : 'them'));
-  const b = el('div', 'bub', m.text);
+  const b = el('div', 'bub', nameFill(m.text));
   row.appendChild(b);
   if(m.t){
     const t = el('div', 'mtime', m.t);
@@ -128,6 +135,7 @@ function sendReply(text){
   const m = msgState();
   m.log.push({ from:'you', text:text, t:clockNow() });
   m.idx++;
+  m.dueAt = 0;
   save();
   const t = document.getElementById('thread');
   if(t) t.appendChild(bubble(m.log[m.log.length - 1]));
@@ -149,6 +157,9 @@ function runMessages(){
   const script = MSG[m.night] || [];
   const beat = script[m.idx];
   if(!beat || beat.choices){ paintComposer(); return; }
+
+  if(!m.dueAt){ m.dueAt = Date.now() + beatDelay(beat); save(); }
+  if(Date.now() < m.dueAt){ paintComposer(); return; }
 
   msgBusy = true;
   paintComposer();
@@ -175,18 +186,26 @@ function runMessages(){
       scrollThread();
     }
     m.idx++;
+    m.dueAt = 0;
     save();
     runMessages();
   }, hold);
 }
 
 /* Called when the player opens the tab, and when a night resolves. */
+let msgTimer = null;
+
 function openMessages(){
   const m = msgState();
-  if(m.night < 1){ m.night = 1; m.idx = 0; save(); }
+  if(m.night < 1){ m.night = 1; m.idx = 0; m.dueAt = 0; save(); }
   paintComposer();
   scrollThread();
   runMessages();
+  clearInterval(msgTimer);
+  msgTimer = setInterval(() => {
+    if(tab !== 'messages'){ clearInterval(msgTimer); msgTimer = null; return; }
+    runMessages();
+  }, 1500);
 }
 
 function advanceMessageNight(night){
@@ -194,6 +213,7 @@ function advanceMessageNight(night){
   if(MSG[night] && m.night !== night){
     m.night = night;
     m.idx = 0;
+    m.dueAt = 0;
     save();
   }
 }
@@ -202,5 +222,7 @@ function unreadMessages(){
   const m = msgState();
   const script = MSG[m.night] || [];
   const beat = script[m.idx];
-  return !!beat;
+  if(!beat) return false;
+  if(beat.choices) return true;
+  return !!m.dueAt && Date.now() >= m.dueAt;
 }

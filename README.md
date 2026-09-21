@@ -41,6 +41,28 @@ mobile-first at 480px.
 
 State persists in `localStorage`. Settings → Reset monitoring history wipes it.
 
+### Pacing
+
+Away Mode is checked, not played. It deliberately cannot be finished in one
+sitting:
+
+- A night cannot be set again until a real **4 hour** window has passed. The
+  button shows the countdown and the app explains it in product language
+  ("away mode runs overnight").
+- Maya answers in real minutes, not instantly — anywhere from 1 to 14 depending
+  on the beat. Her replies land whether the app is open or not, and the
+  Messages tab carries a dot when something is waiting.
+
+Add `?dev=1` to the URL to collapse both (a "minute" becomes 0.7s and the night
+cooldown becomes 12s) so the whole arc can be walked in a few minutes while
+building.
+
+### First launch
+
+The player enters a name. It fills the `Account holder` row in Settings, is
+substituted into `{name}` tokens in the owner thread, and never leaves
+`localStorage`.
+
 ## Layout
 
 ```
@@ -94,6 +116,10 @@ with the act-three room reveal, camera grid, persistent state.
 Not built yet:
 - Notifications (opt-in, local, daytime-only; the hook is deliberately absent
   until the consent copy is written)
-- Nights 6+
-- Audio (optional by design — the game has to work fully on mute)
+- Nights 6+ and the owner thread past night 4
+- Camera 07 state machine
+- The install manifest in Settings (the camera 06 reveal)
 - The ending
+
+No voice acting, ever. Synthetic speech would break the one thing this game has
+going for it. The typing indicator carries what a voice would.

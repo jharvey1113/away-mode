@@ -138,3 +138,9 @@ svg.plan{display:block;width:100%;height:auto;background:#101316}
 .badge{position:absolute;top:8px;margin-left:34px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 #tabs{grid-template-columns:repeat(5,1fr)}
 .tab{position:relative}
+.setup-h{font-size:19px;font-weight:500;margin-bottom:6px}
+.field{width:100%;margin-top:16px;padding:13px 14px;border-radius:var(--radius);
+  border:1px solid var(--line);background:#101315;color:var(--text);font:inherit;font-size:16px}
+.field:focus{outline:none;border-color:#2f5b83;box-shadow:0 0 0 3px rgba(74,143,212,.16)}
+.fielderr{margin-top:8px;font-size:13px;color:var(--danger)}
+#tabs[hidden]{display:none}
