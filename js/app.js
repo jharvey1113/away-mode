@@ -349,8 +349,12 @@ function screenSetup(){
   const wrap = document.createDocumentFragment();
   const c = el('div', 'card');
   const p = el('div', 'card-pad');
-  p.appendChild(el('div', 'setup-h', 'Finish setting up'));
-  p.appendChild(el('div', 'muted', 'This name appears on the account and on alerts sent from the property.'));
+  p.appendChild(el('div', 'setup-h', 'Name on the account'));
+  p.appendChild(el('div', 'muted', 'Shown on alerts from the property. No account, password or sign-in needed — any name works.'));
+
+  const form = document.createElement('form');
+  form.className = 'setup-form';
+  form.setAttribute('novalidate', '');
 
   const inp = document.createElement('input');
   inp.type = 'text';
@@ -358,18 +362,27 @@ function screenSetup(){
   inp.className = 'field';
   inp.maxLength = 24;
   inp.autocomplete = 'off';
-  inp.placeholder = 'Account holder';
-  inp.setAttribute('aria-label', 'Account holder name');
-  p.appendChild(inp);
+  inp.autocapitalize = 'words';
+  inp.spellcheck = false;
+  inp.enterKeyHint = 'go';
+  inp.placeholder = 'Your name';
+  inp.setAttribute('aria-label', 'Your name');
+  form.appendChild(inp);
 
   const err = el('div', 'fielderr');
   err.id = 'nameErr';
   err.hidden = true;
-  p.appendChild(err);
+  form.appendChild(err);
 
-  const go = el('button', 'btn primary', 'Continue');
+  const go = document.createElement('button');
+  go.type = 'submit';
+  go.className = 'btn primary';
+  go.textContent = 'Start monitoring';
   go.style.marginTop = '14px';
-  go.addEventListener('click', () => {
+  form.appendChild(go);
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
     const v = inp.value.trim();
     if(!v){
       err.textContent = 'Enter a name to continue.';
@@ -382,13 +395,13 @@ function screenSetup(){
     render();
   });
   inp.addEventListener('input', () => { err.hidden = true; });
-  inp.addEventListener('keydown', e => { if(e.key === 'Enter') go.click(); });
-  p.appendChild(go);
+
+  p.appendChild(form);
 
   const note = el('div', 'dim');
   note.style.fontSize = '12px';
   note.style.marginTop = '12px';
-  note.textContent = 'Stored on this device only.';
+  note.textContent = 'Stored on this device only. Nothing is sent anywhere.';
   p.appendChild(note);
 
   c.appendChild(p);
@@ -488,8 +501,6 @@ function render(){
     const scr0 = document.getElementById('screen');
     scr0.innerHTML = '';
     scr0.appendChild(screenSetup());
-    const f = document.getElementById('nameInput');
-    if(f) f.focus();
     return;
   }
   document.getElementById('barTitle').textContent = TITLES[tab];
