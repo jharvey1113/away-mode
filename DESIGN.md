@@ -70,128 +70,150 @@ Hold long enough that the player confirms all six are clean.
 The status line has always read `6 cameras online`. Without comment it becomes
 `7 cameras online`.
 
-No warning, no alert. The player should notice on their own. A new entry
-appears:
+No warning, no alert. A new entry appears:
 
 ```
-CAM 07 — UNKNOWN
+CAM 07
 ```
 
-It corresponds to nothing on the floor plan. Opening it shows `room_a`: bare
-walls, plain flooring, no windows, no furniture, one doorway, same ceiling-corner
-perspective and grade as every other camera.
+The interface never interprets. No caption reads "unknown room", "view: kitchen?"
+or "second camera detected" — those existed for us while designing and must be
+cropped out of the shipped frames. The feed shows the camera name and a
+timestamp, nothing else. The player gets to have the realisation themselves.
 
-Nothing supernatural. The room existing at all is the event. The player stops
-asking who is in the house and starts asking where this camera is.
+## Phase 4 — camera 07
 
-## Phase 4 — camera 07 evolves
+Seven states of one fixed camera position. Ordinary room, one doorway.
 
-Discrete states, spaced out across normal play. Never back to back.
-
-| State | Change |
+| File | State |
 |---|---|
-| 1 | Bare room, doorway visible, nothing unusual. |
-| 2 | Identical composition. The doorway is now completely dark. Nothing else changes. |
-| 3 | A barely visible human silhouette deep inside the doorway. No face, no eyes, no monster features. |
-| 4 | The figure is gone. Room empty again. |
-| 5 | A desk and chair now exist in the room. They were never there. |
-| 6 | A monitor on the desk, displaying a six-camera security interface that visibly resembles the player's own. **First major reveal.** |
-| 7 | The desk chair is pulled away from the desk. |
-| 8 | A person is sitting in it, facing the monitors, back to camera 07. Not identifiable. No face. |
+| `room_a` | Door closed. Aggressively ordinary. |
+| `room_b` | Door open onto complete darkness. |
+| `room_c` | Door open onto the living room. |
+| `room_d` | Door open onto the kitchen. |
+| `room_e` | Door open onto the upstairs hallway. |
+| `room_f` | Door closed. A second camera is now mounted in the corner, pointed back at this one. A shadow falls across the wall with nothing present to cast it. |
 
-## Phase 5 — mirrored behaviour
+`room_c` → `room_d` → `room_e` is where the player learns the rule without being
+told it: the doorway does not lead anywhere fixed. Three data points is enough.
 
-Camera 07 responds to the player, in discrete stills rather than animation.
-Switching feeds may shift the seated figure's hand near the mouse. Going idle
-leaves them motionless. Selecting another camera may reposition them slightly
-toward the monitor.
+`room_f` is never explained. Not in the log, not in settings, not in the ending.
 
-Never state that the figure is copying the player. Let them land on it.
+### Pacing
 
-## Phase 6 — motion alerts
+Never run the states in order. Camera 07 should often be unchanged across several
+checks, and it should revert:
 
 ```
-MOTION DETECTED — CAM 07
+a  a  b  b  a  c  c  d  a  e  f
 ```
 
-The desk and monitors are still there. The chair is empty. Then, with pauses:
+If something new happens every time the player opens it, they learn that opening
+it is what causes the change, and it becomes a slot machine. Unpredictability —
+including long stretches of nothing — is what keeps them checking.
+
+### No further cameras
+
+Camera 07 is the impossible camera. There is no attic, no basement, no camera 09.
+The only addition after this is camera 08, which exists solely for the ending.
+
+## The ending
+
+Short, because camera 07 already delivered the supernatural payload. The house's
+layout stopped making sense; the ending does not need to explain that. It needs
+to turn the attention toward the player.
+
+**Quiet.** All six house cameras return to their original `_a` frames — byte for
+byte the same files, so the player cannot find a difference even if they look
+for one. Camera 07 is gone.
 
 ```
-MOTION DETECTED — HALL      nothing there
-MOTION DETECTED — LIVING    nothing there
-MOTION DETECTED — ENTRY     nothing there
-MOTION DETECTED — PORCH     nothing there
+6 cameras online
 ```
 
-Something is crossing the house toward somewhere. Never show it moving between
-cameras. The absence carries it.
+Let them sit with it.
 
-## Phase 7 — the eighth camera
-
-```
-8 cameras online
-CAM 08 — LOCAL
-```
-
-Selecting it holds on black for 1.5–3 seconds before the image loads.
-
-The frame shows an in-universe monitoring station: desk, computer, chair, a dim
-room, the security interface visible on the monitor, a person seated, camera
-mounted behind or above them. The player should recognise the person at the
-desk as themselves.
-
-**This is fictional and must stay fictional.** It never depicts, claims, or
-implies access to the player's real surroundings, camera, or device. The horror
-is perspective, not intrusion.
-
-Behind the seated person stands the shadow figure. Clearest appearance in the
-game, same visual language throughout: human silhouette, no face, no glowing
-eyes, no exaggerated anatomy, no weapon, no gore, no attack pose. Standing.
-Watching the person.
-
-No sting, no zoom, no rush toward camera. Hold the feed long enough that a
-player scanning the frame eventually finds it.
-
-## Camera failure
-
-After enough time on CAM 08, disconnect the feeds one at a time with deliberate
-pauses:
+**Alerts.** After a long pause, motion alerts arrive one at a time, each feed
+empty when opened:
 
 ```
-CAM 08 — OFFLINE
-CAM 07 — OFFLINE
+MOTION DETECTED — ENTRY     nothing
+MOTION DETECTED — LIVING    nothing
+MOTION DETECTED — HALL      nothing
+MOTION DETECTED — PORCH     nothing
+```
+
+The route must not be walkable. A player who traces it on the floor plan should
+find it impossible, not merely unlucky.
+
+Vary the reliability rather than the content, so four empty feeds are not four
+identical beats: the first loads instantly, the second takes a moment, the third
+sits on `reconnecting` for two seconds, the fourth is instant again. The system
+degrades and recovers without ever commenting on it.
+
+The floor plan carries this sequence. Watching a pin cross a map the player
+knows by heart, while every camera shows nothing, is worse than the feeds.
+
+**The porch.** Empty. The front door is closed. Whatever the system tracked
+across the house toward the door never left.
+
+**Eight.**
+
+```
+7 cameras online
+CAM 08
+```
+
+Camera 07 does not come back. The numbering is wrong and nothing acknowledges it.
+
+**The last image.** Two seconds of black, then `local_a`: a dim room, a desk, a
+monitor showing the Away Mode interface with the six house cameras, a person
+seated with their back to us. Behind them, standing, the shadow figure.
+
+In-universe and fictional. It never depicts, claims, or implies access to the
+player's real surroundings, camera, or device. The horror is perspective, not
+intrusion.
+
+No sting, no zoom, no movement. Hold long enough that a player studying the
+monitor eventually notices what is behind the chair. Ten seconds of nothing
+happening.
+
+**Signal loss.** Then, with pauses:
+
+```
+CAM 08 SIGNAL LOST
 HALL — OFFLINE
 UTILITY — OFFLINE
 LIVING — OFFLINE
 KITCHEN — OFFLINE
 ENTRY — OFFLINE
 PORCH — OFFLINE
-```
-
-The interface empties out. Then:
-
-```
 NO CAMERAS ONLINE
 ```
 
-Hold several seconds. No music, minimal ambient system noise. Then:
+Black. Hold longer than is comfortable. Then the app's own friendly chime — the
+same pleasant sound it has used for every routine notification all game — and:
 
 ```
 AWAY MODE DISABLED
 Reason: Home detected.
 ```
 
-Hold. Fade. Title card: `AWAY MODE`. Pause. Credits.
+Black. `AWAY MODE`. Pause. Credits.
+
+No epilogue. The owners never come back. Nothing is explained — not the figure,
+not camera 07, not why the impossible room connected to the other rooms, and
+above all not what "home detected" means.
 
 ## Prohibited
 
 Jumpscares. Screaming faces. Monsters charging the camera. Glowing eyes. Gore.
-Blood messages. Loud stingers. Any explanation of the entity, camera 07, camera
-08, or the final message.
+Blood messages. Loud stingers. Captions that interpret an image for the player.
+Any explanation of the entity, camera 07, camera 08, or the final message.
 
 ## Readings to preserve
 
-The player should finish with all of these available and none confirmed:
+All available, none confirmed:
 
 - Something entered the house.
 - Something was already inside it.
@@ -205,21 +227,21 @@ The player should finish with all of these available and none confirmed:
 
 ## Open questions
 
-Three places where this design and the current engine need a decision.
+**1. Slot limits versus the quiet phase.** Arming 3 of 10 means the player may
+never see all six clean at once, which is what that beat depends on. Cameras 07
+and 08 are already exempt from the slot system in code — they are not the
+player's and report whether asked or not. The quiet phase still needs a
+`system integrity check` event that captures all six at once. That also sharpens
+the seventh camera's arrival, because it appears in a list the app just called
+complete.
 
-**1. Slot limits versus phases 2, 3 and 7.** The night loop only lets the player
-arm 3 of 10 zones, so they may never see a full clean sweep — which is exactly
-what phase 2 depends on. Proposed fix: cameras 07 and 08 sit outside the slot
-system entirely (you cannot arm what isn't yours, and they report whether you
-asked or not), and phase 2 arrives as a `system integrity check` event that
-captures all six at once. That also makes the seventh camera's arrival land
-harder, because it shows up in a list the player was just told was complete.
+**2. One last decision.** The game's spine is commitment — arming, locking,
+living with it. Proposal: after the porch alert resolves with the door closed,
+the app offers the front door lock one final time. Whether the player throws it
+changes nothing mechanically and the game never comments. But if they do, the
+last thing they did was seal the house, and `Reason: Home detected` lands on
+them rather than at them.
 
-**2. Phase 5 pacing.** Key the mirrored states to camera-switch *count* rather
-than elapsed time. Time-based feels like animation; count-based feels like
-being answered.
-
-**3. Where phase 1 sits.** The current nights 1–5 end at the unmapped-room
-reveal on the floor plan. Phase 1 as written is an aftermath set, so it needs
-the figure to have appeared two or three times first — which means the `_d`
-frames land around nights 4–6 and phase 1 becomes night 7 or 8.
+**3. Where the quiet phase sits.** It is an aftermath beat, so the figure needs
+two or three appearances first. That puts the `_d` frames around nights 4–6 and
+the quiet at night 7 or 8.

@@ -5,7 +5,8 @@ const zoneById = id => HOUSE.zones.find(z => z.id === id);
 let S, tab = 'home', busy = false;
 
 function fresh(){
-  return { night:1, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{}, lastSummary:null };
+  return { night:1, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
+           lastSummary:null, camIndex:0, camSwitches:0 };
 }
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
 function load(){
@@ -220,27 +221,66 @@ function lastStillFor(zoneId){
   return null;
 }
 
+/* The camera list is not the same thing as the sensor list. Cameras 07 and 08
+   are not the player's and never consume an arming slot - they report whether
+   they were asked to or not. */
+function feedList(){
+  const out = HOUSE.zones.filter(z => z.kind === 'camera')
+    .map(z => ({ id:z.id, label:z.label, code:null }));
+  if(S.flags.cam07) out.push({ id:'cam07', label:'Unknown', code:'CAM 07', still:S.flags.cam07State || 'room_a' });
+  if(S.flags.cam08) out.push({ id:'cam08', label:'Local',   code:'CAM 08', still:S.flags.cam08State || 'local_a' });
+  return out;
+}
+
+function selectCam(i){
+  const feeds = feedList();
+  S.camIndex = (i + feeds.length) % feeds.length;
+  S.camSwitches++;
+  save();
+  render();
+}
+
 function screenCameras(){
   const wrap = document.createDocumentFragment();
-  const note = el('div', 'card');
-  const np = el('div', 'card-pad');
-  np.style.fontSize = '13px';
-  np.appendChild(el('div', 'muted', 'Live view is unavailable while away mode is enabled. Showing last capture.'));
-  note.appendChild(np);
-  wrap.appendChild(note);
+  const feeds = feedList();
+  if(S.camIndex >= feeds.length) S.camIndex = 0;
+  const cam = feeds[S.camIndex];
+  const last = cam.still ? null : lastStillFor(cam.id);
+  const still = cam.still || (last && last.still);
 
-  const grid = el('div', 'grid2');
-  for(const z of HOUSE.zones.filter(x => x.kind === 'camera')){
-    const last = lastStillFor(z.id);
-    const box = el('div');
-    box.appendChild(feedTile(last && last.still, last ? last.t : '', z.label));
-    const cap = el('div', 'muted', last ? 'Last capture ' + last.date : 'No captures');
-    cap.style.fontSize = '11px';
-    cap.style.marginTop = '5px';
-    box.appendChild(cap);
-    grid.appendChild(box);
-  }
-  wrap.appendChild(grid);
+  const card = el('div', 'card');
+  const big = feedTile(still, last ? last.date + '  ' + last.t : '', cam.code || cam.label);
+  big.style.borderRadius = '0';
+  card.appendChild(big);
+
+  const nav = el('div', 'camnav');
+  const prev = el('button', 'navbtn', '‹');
+  prev.setAttribute('aria-label', 'Previous camera');
+  prev.addEventListener('click', () => selectCam(S.camIndex - 1));
+  const mid = el('div', 'grow');
+  mid.appendChild(el('div', 'lab', cam.code ? cam.code + ' — ' + cam.label.toLowerCase() : cam.label));
+  mid.appendChild(el('div', 'sub', still ? (last ? 'Last capture ' + last.date : 'Last capture') : 'No captures'));
+  mid.style.textAlign = 'center';
+  const next = el('button', 'navbtn', '›');
+  next.setAttribute('aria-label', 'Next camera');
+  next.addEventListener('click', () => selectCam(S.camIndex + 1));
+  nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next);
+  card.appendChild(nav);
+  wrap.appendChild(card);
+
+  const chips = el('div', 'camchips');
+  feeds.forEach((f, i) => {
+    const c = el('button', 'chip' + (i === S.camIndex ? ' sel' : ''), f.code || f.label);
+    c.addEventListener('click', () => selectCam(i));
+    chips.appendChild(c);
+  });
+  wrap.appendChild(chips);
+
+  const note = el('div', 'dim');
+  note.style.fontSize = '12px';
+  note.style.textAlign = 'center';
+  note.textContent = 'Live view is unavailable in away mode. Showing last capture.';
+  wrap.appendChild(note);
   return wrap;
 }
 
@@ -367,6 +407,7 @@ function render(){
   const sub = document.getElementById('barSub');
   if(tab === 'home') sub.textContent = S.night > NIGHTS.length ? HOUSE.address : 'Night ' + S.night + ' · ' + NIGHTS[S.night - 1].date;
   else if(tab === 'activity') sub.textContent = S.log.length ? 'Last 7 days' : '';
+  else if(tab === 'cameras') sub.textContent = feedList().length + ' cameras online';
   else sub.textContent = '';
 
   const scr = document.getElementById('screen');
@@ -377,6 +418,8 @@ function render(){
     tab === 'cameras' ? screenCameras() : screenSettings()
   );
   for(const b of document.querySelectorAll('.tab')) b.classList.toggle('sel', b.dataset.tab === tab);
+  const selChip = document.querySelector('.camchips .sel');
+  if(selChip) selChip.scrollIntoView({ block:'nearest', inline:'center' });
   window.scrollTo(0, 0);
 }
 
