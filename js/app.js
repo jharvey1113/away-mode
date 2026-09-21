@@ -20,7 +20,8 @@ function planSvg(which){
   const def = ROOMS[which];
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', def.vb);
+  const showGhost = which === 'ground' && S.flags.extraRoom;
+  svg.setAttribute('viewBox', showGhost && def.vbGhost ? def.vbGhost : def.vb);
   svg.setAttribute('class', 'plan');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', which === 'ground' ? 'Ground floor plan' : 'Upper floor plan');
@@ -50,6 +51,11 @@ function planSvg(which){
     }
   }
   return svg;
+}
+
+function floorLabel(text){
+  const d = el('div', 'floorlab', text);
+  return d;
 }
 
 /* ---------- camera feed tile ---------- */
@@ -86,7 +92,9 @@ function screenHome(){
   body.appendChild(row);
   body.appendChild(el('div', 'muted', HOUSE.address));
   st.appendChild(body);
+  st.appendChild(floorLabel('Ground floor'));
   st.appendChild(planSvg('ground'));
+  st.appendChild(floorLabel('Upper floor'));
   st.appendChild(planSvg('upper'));
   wrap.appendChild(st);
 
@@ -171,7 +179,7 @@ function screenActivity(){
     const c = el('div', 'card');
     const h = el('div', 'card-head');
     h.appendChild(el('h2', null, grp.date));
-    h.appendChild(el('span', 'chip', grp.entries.length + ' events'));
+    h.appendChild(el('span', 'chip', grp.entries.length + (grp.entries.length === 1 ? ' event' : ' events')));
     c.appendChild(h);
     if(!grp.entries.length){
       const p = el('div', 'card-pad');

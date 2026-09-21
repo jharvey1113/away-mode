@@ -21,7 +21,7 @@ const HOUSE = {
 };
 
 const ROOMS = {
-  ground: { vb:'0 0 300 306', items:[
+  ground: { vb:'0 40 300 266', vbGhost:'0 0 300 306', items:[
     { zone:'ghost',   x:94,  y:14,  w:56,  h:34, label:'',             ghost:true },
     { zone:'garage',  x:10,  y:54,  w:76,  h:82, label:'Garage' },
     { zone:'utility', x:94,  y:54,  w:56,  h:52, label:'Utility' },

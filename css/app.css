@@ -101,3 +101,5 @@ svg.plan{display:block;width:100%;height:auto;background:#101316}
 .night .big{font-size:26px;font-weight:600;letter-spacing:-.02em}
 .night .sm{color:var(--muted);margin-top:8px;font-size:14px}
 @keyframes fade{from{opacity:0}to{opacity:1}}
+.floorlab{padding:9px 16px 5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--dim);border-top:1px solid var(--line);background:#121518}
