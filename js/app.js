@@ -550,11 +550,11 @@ function screenReview(){
   });
   wrap.appendChild(rep);
 
-  if(S.reviewIdx === cams.length - 1){
-    const fin = el('button','btn ghost','Finish review');
-    fin.addEventListener('click', () => { tab = 'activity'; render(); });
-    wrap.appendChild(fin);
-  }
+  const last = S.reviewIdx === cams.length - 1;
+  const fin = el('button', 'btn' + (last ? ' primary' : ' ghost'),
+    last ? 'Done — back to the property' : 'Skip review');
+  fin.addEventListener('click', () => { tab = 'home'; render(); });
+  wrap.appendChild(fin);
 
   const note = el('div','dim');
   note.style.fontSize = '12px';
