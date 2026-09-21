@@ -21,7 +21,7 @@ function untilText(ms){
 }
 
 function fresh(){
-  return { night:1, name:'', brief:false, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
+  return { night:1, name:'', brief:false, reach:0, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
            lastSummary:null, camIndex:0, camSwitches:0, nextNightAt:0 };
 }
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
@@ -46,11 +46,14 @@ function planSvg(which){
   for(const r of def.items){
     if(r.ghost && !S.flags.extraRoom) continue;
     const armed = S.armed.includes(r.zone);
+    let reached = false;
+    for(let k = 1; k <= (S.reach || 0); k++) if(REACH_ZONES[k].indexOf(r.zone) !== -1) reached = true;
     const rect = document.createElementNS(ns, 'rect');
     rect.setAttribute('x', r.x); rect.setAttribute('y', r.y);
     rect.setAttribute('width', r.w); rect.setAttribute('height', r.h);
     rect.setAttribute('rx', 2);
-    rect.setAttribute('class', 'rm' + (r.out ? ' out' : '') + (r.ghost ? ' ghost' : '') + (armed ? ' armed' : ''));
+    rect.setAttribute('class', 'rm' + (r.out ? ' out' : '') + (r.ghost ? ' ghost' : '')
+      + (reached ? ' reached' : '') + (armed ? ' armed' : ''));
     svg.appendChild(rect);
 
     if(r.label){
@@ -81,7 +84,13 @@ function feedTile(still, stamp, zoneLabel){
   const box = el('div', 'feed');
   const ns = el('div', 'ns', 'no signal');
   box.appendChild(ns);
-  if(still){
+  if(still && typeof VIDEO_FEEDS !== 'undefined' && VIDEO_FEEDS.indexOf(still) !== -1){
+    const v = document.createElement('video');
+    v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.addEventListener('loadeddata', () => { ns.remove(); box.insertBefore(v, box.firstChild); });
+    v.src = 'assets/feeds/' + still + '.mp4';
+  } else if(still){
     const img = new Image();
     img.alt = zoneLabel ? zoneLabel + ' capture' : 'camera capture';
     img.addEventListener('load', () => { ns.remove(); box.insertBefore(img, box.firstChild); });
@@ -103,11 +112,18 @@ function screenHome(){
   head.appendChild(el('span', 'chip', S.armed.length + ' of ' + HOUSE.slots + ' sensors'));
   st.appendChild(head);
   const body = el('div', 'card-pad');
+  const r = REACH[S.reach || 0];
   const row = el('div', 'status');
-  row.appendChild(el('span', 'dot ' + (S.armed.length ? 'on' : 'warn')));
-  row.appendChild(el('span', null, S.armed.length ? 'Monitoring active' : 'No sensors selected'));
+  row.appendChild(el('span', 'dot ' + (S.reach >= 3 ? 'bad' : S.reach >= 1 ? 'warn' : 'on')));
+  row.appendChild(el('span', null, 'Furthest activity: ' + r.label));
   body.appendChild(row);
-  body.appendChild(el('div', 'muted', HOUSE.address));
+  const nt = el('div', 'muted', r.note);
+  nt.style.fontSize = '13px';
+  nt.style.marginTop = '2px';
+  body.appendChild(nt);
+  const left = NIGHTS.length - S.night + 1;
+  body.appendChild(el('div', 'dim', HOUSE.address + ' \u00b7 ' +
+    (left > 0 ? left + (left === 1 ? ' night until they land' : ' nights until they land') : 'they have landed')));
   st.appendChild(body);
   st.appendChild(floorLabel('Ground floor'));
   st.appendChild(planSvg('ground'));
@@ -116,7 +132,10 @@ function screenHome(){
   wrap.appendChild(st);
 
   const locks = el('div', 'card');
-  const lh = el('div', 'card-head'); lh.appendChild(el('h2', null, 'Doors')); locks.appendChild(lh);
+  const lh = el('div', 'card-head');
+  lh.appendChild(el('h2', null, 'Doors'));
+  lh.appendChild(el('span', 'chip', HOUSE.locks.filter(x => S.locks[x.id]).length + ' of ' + HOUSE.lockSlots + ' locked'));
+  locks.appendChild(lh);
   const lr = el('div', 'rows');
   for(const L of HOUSE.locks){
     const r = el('div', 'row');
@@ -129,7 +148,16 @@ function screenHome(){
     sw.setAttribute('tabindex', '0');
     sw.setAttribute('aria-label', L.label);
     sw.setAttribute('aria-checked', S.locks[L.id] ? 'true' : 'false');
-    sw.addEventListener('click', () => { S.locks[L.id] = !S.locks[L.id]; save(); render(); });
+    const lockedCount = HOUSE.locks.filter(x => S.locks[x.id]).length;
+    const lockFull = lockedCount >= HOUSE.lockSlots && !S.locks[L.id];
+    if(lockFull){ g.style.opacity = '.45'; sw.style.opacity = '.4'; }
+    g.querySelector('.sub').textContent = S.locks[L.id] ? 'Locked'
+      : (lockFull ? 'Unlocked \u2014 no lock slots free' : 'Unlocked');
+    sw.addEventListener('click', () => {
+      if(S.locks[L.id]) S.locks[L.id] = false;
+      else if(lockedCount < HOUSE.lockSlots) S.locks[L.id] = true;
+      save(); render();
+    });
     r.appendChild(sw);
     lr.appendChild(r);
   }
@@ -499,6 +527,24 @@ function screenReview(){
   const base = BASELINE[cam.id];
   const isBase = shot === base;
 
+  const verdict = el('div', 'card');
+  const vp = el('div', 'card-pad');
+  if(grp.probe && grp.probe !== 'none'){
+    const L = HOUSE.locks.find(x => x.id === grp.probe);
+    const st = el('div', 'status');
+    st.appendChild(el('span', 'dot ' + (grp.held ? 'on' : 'bad')));
+    st.appendChild(el('span', null, grp.held ? 'The ' + L.label.toLowerCase() + ' held'
+                                             : 'It came in through the ' + L.label.toLowerCase()));
+    vp.appendChild(st);
+  } else {
+    const st = el('div', 'status');
+    st.appendChild(el('span', 'dot ' + (S.reach >= 4 ? 'bad' : 'warn')));
+    st.appendChild(el('span', null, 'Furthest activity: ' + REACH[S.reach || 0].label));
+    vp.appendChild(st);
+  }
+  verdict.appendChild(vp);
+  wrap.appendChild(verdict);
+
   const card = el('div','card');
   const holder = el('div');
   holder.id = 'reviewFeed';
@@ -595,8 +641,24 @@ function runNight(){
 
 function resolveNight(){
   const n = NIGHTS[S.night - 1];
+
+  /* It tests one door. A thrown deadbolt holds it where it is; an open one
+     lets it further in, and reach never comes back down. */
+  let branch = n;
+  let held = false;
+  if(n.blocked || n.open){
+    held = n.probe === 'none' ? false : !!S.locks[n.probe];
+    branch = held ? n.blocked : n.open;
+    if(!held) S.reach = Math.min(REACH.length - 1, (S.reach || 0) + 1);
+    else if(!S.reach) S.reach = 1;
+  } else if(n.day === 1){
+    S.reach = Math.max(S.reach || 0, 1);
+  }
+  S.lastHeld = held;
+  S.lastProbe = n.probe;
+
   const entries = [];
-  for(const ev of n.events){
+  for(const ev of (branch.events || [])){
     if(ev.effect) ev.effect(S);
     const visible = ev.contact || ev.always || n.allZones || S.armed.includes(ev.zone);
     if(!visible) continue;
@@ -607,10 +669,11 @@ function resolveNight(){
   if(n.onResolve) n.onResolve(S);
   advanceMessageNight(n.day);
   const unmonitored = n.allZones ? 0 : HOUSE.zones.length - S.armed.length;
-  S.captures = Object.assign({}, n.captures);
+  S.captures = Object.assign({}, branch.captures);
   S.reviewIdx = 0;
   S.reported = [];
-  S.log.unshift({ date:n.date, day:n.day, entries, unmonitored, captures:S.captures, anomaly:n.anomaly });
+  S.log.unshift({ date:n.date, day:n.day, entries, unmonitored, captures:S.captures,
+                  anomaly:branch.anomaly, held:held, probe:n.probe });
   S.lastSummary = { date:n.date, count:entries.length, unmonitored, note:MORNINGS[n.day] || '' };
   S.night++;
   S.armed = [];
