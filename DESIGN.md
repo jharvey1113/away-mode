@@ -245,3 +245,149 @@ them rather than at them.
 **3. Where the quiet phase sits.** It is an aftermath beat, so the figure needs
 two or three appearances first. That puts the `_d` frames around nights 4–6 and
 the quiet at night 7 or 8.
+
+---
+
+# The owner thread
+
+A second information channel, carried by `js/messages.js`. Text can state
+contradictions that no camera frame can, and the second act of this game is
+entirely contradiction.
+
+## Where it lives
+
+Inside Hearthwatch, as a property-contact thread. **Never a fake iOS or Android
+Messages app.** A cloned OS chat breaks the instant someone opens it on the
+wrong platform, and it violates the no-fake-system-UI rule. An in-app thread is
+plausible everywhere and has nothing to fake — it is a real chat interface built
+with the same HTML and CSS a real one would use.
+
+## The rule that makes Maya work
+
+**Maya is never frightened and never dramatic.** She never says "oh my god",
+never panics, never tells the player to get out. Everything she produces is
+mundane and factual, and that is exactly what makes it land:
+
+> There isn't a door there.
+> We only have six.
+> We're still about 20 minutes away.
+
+If she gets scared, the game becomes about her and the player stops being alone.
+Being alone is the asset. She is the most normal person in the game.
+
+## The player's voice
+
+The player's verbs so far are arm, lock, commit. Dialogue must not introduce a
+different grammar. Two or three options, always terse — `Package.` `ok` `No.` —
+so the player character stays someone who types as little as possible. The
+moment the choices get eloquent this becomes a visual novel.
+
+**Send photo is a verb, not a menu item.** It should only be reachable from a
+camera feed, so sharing evidence means going to Cameras, choosing the frame and
+sending it. Three times in the whole game at most. It is the only action that
+puts the player's evidence in someone else's hands, and it triggers the two best
+beats.
+
+## Arc
+
+**Boring first.** Motion out front, it's a package, probably Daniel's. "This
+system was such a good investment lol". Nothing creepy comes from her for the
+first act. That normality is what buys the horror later.
+
+**The first crack.** `Is someone checking the house tonight?` / `No. Why?` She
+does not react. Daniel probably left the cabinet open; he does that.
+
+**The utility door.** `What's through the door in the utility room?` / `The
+garage.` / `Wait which door?` The player sends the photo. Long typing. It stops.
+It starts again. `There isn't a door there.`
+
+The player has been looking at that door for four nights.
+
+**Camera 07.** The player tells her. `We only have six.` Sends the image.
+`Where is that?` Then:
+
+> James don't open that door.
+
+The player never mentioned a door. Nothing acknowledges this. No music, no
+highlight, no log entry.
+
+A new reply appears: `How did you know about the door?` Choosing it produces a
+typing indicator that runs and then stops, and Maya goes offline.
+
+**If the player does not choose it, it stays.** The unsent reply sits in the
+composer for the rest of the game, every time they open the thread.
+
+**The old threads.** With Maya gone the player digs. A conversation with Daniel:
+
+> Maya: Did you check the cameras?
+> Daniel: They're fine.
+> Maya: Including upstairs?
+> Daniel: We don't have one upstairs.
+
+**The install manifest.** Settings lists the paired devices, as it has since the
+first launch:
+
+```
+PORCH   ENTRY   KITCHEN   LIVING   UTILITY   GARAGE
+```
+
+There is no HALL camera. There never was. Camera 07 is not the first impossible
+camera — camera 06 was, and the player has been watching it since night one.
+
+This needs no new art and no found object. It lives in a Settings row the player
+has scrolled past a dozen times. Note also that the manifest says GARAGE where
+the app labels the feed UTILITY: a discrepancy nobody notices until it matters.
+
+**She comes back.**
+
+> Sorry. Lost signal.
+> Did someone message you from my account?
+
+Choices: `You did.` / `What are you talking about?` / `You told me not to open
+the door.`
+
+The last one gets `I didn't send that.` — and when the player scrolls up, the
+message is gone.
+
+**The log stops being trustworthy.**
+
+```
+23:41  Motion detected — hall
+23:43  Motion detected — entry
+23:46  Motion detected — porch
+23:47  User arrived home
+23:48  Front door unlocked
+23:49  Away mode disabled
+```
+
+The player tries to re-enable it:
+
+> Unable to enable Away Mode while home is occupied.
+
+This is the same system voice that closes the game. `Reason: Home detected` is
+foreshadowed, hours earlier, by an error string.
+
+**Last exchange.** Before camera 08:
+
+> We're still about 20 minutes away.
+> Who's in the house?
+
+Everything is empty. Then:
+
+> I'm not talking about my house.
+
+## The player's name
+
+Settings has always had an `Account holder` row, currently blank. If the player
+is asked for a name at first launch, it fills that row, stays in `localStorage`,
+and never leaves the device — and Maya can use it exactly once, at the worst
+moment.
+
+Later, the Account holder row changes on its own. Nothing comments.
+
+## Open question
+
+This breaks the original rule that nobody in this game ever speaks. It is worth
+breaking, because contradiction is what the second act runs on and images cannot
+carry it. But Maya is the only voice the game ever gets, and the never-
+frightened rule is what keeps the change from costing the isolation.

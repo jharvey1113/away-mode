@@ -110,3 +110,31 @@ svg.plan{display:block;width:100%;height:auto;background:#101316}
 .camchips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px}
 .camchips .chip{white-space:nowrap;cursor:pointer;font:inherit;font-size:12px;padding:6px 11px}
 .camchips .chip.sel{background:#23405c;border-color:#2f5b83;color:#dbe9f7}
+.mhead{display:flex;align-items:center;gap:12px;padding:12px 4px 4px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--surface2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);flex:none}
+.thread{display:flex;flex-direction:column;gap:3px;padding:6px 0 4px}
+.mrow{display:flex;flex-direction:column;max-width:78%}
+.mrow.them{align-self:flex-start;align-items:flex-start}
+.mrow.me{align-self:flex-end;align-items:flex-end}
+.thread .bub{background:#1f2429;color:#e2e6e9;border-radius:17px;padding:8px 13px;font-size:15px;
+  line-height:1.35;word-wrap:break-word}
+.mrow.me .bub{background:#2f6ea8;color:#f2f7fb}
+.mtime{font-size:11px;color:var(--dim);padding:2px 6px 6px}
+.bub.typing{display:flex;gap:4px;padding:12px 14px}
+.bub.typing span{width:7px;height:7px;border-radius:50%;background:#767f88;animation:blip 1.25s infinite}
+.bub.typing .dot1{animation-delay:.18s} .bub.typing .dot2{animation-delay:.36s}
+@keyframes blip{0%,60%,100%{opacity:.32;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.composer{position:sticky;bottom:0;padding-top:6px;background:linear-gradient(to top,var(--bg) 62%,transparent)}
+.suggest{display:flex;flex-direction:column;gap:7px;padding-bottom:9px}
+.sugbtn{background:transparent;border:1px solid #2f5b83;color:#9fc6e8;border-radius:17px;padding:9px 14px;
+  font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.sugbtn:active{background:#1b2c3d}
+.inputbar{display:flex;align-items:center;gap:8px;padding-bottom:4px}
+.fakeinput{flex:1;background:#16191b;border:1px solid var(--line);border-radius:999px;padding:9px 14px;
+  font-size:15px;color:#4d5359}
+.sendico{width:34px;height:34px;border-radius:50%;background:var(--surface2);color:var(--dim);flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:17px}
+.badge{position:absolute;top:8px;margin-left:34px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+#tabs{grid-template-columns:repeat(5,1fr)}
+.tab{position:relative}

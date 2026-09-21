@@ -362,6 +362,7 @@ function resolveNight(){
                    zone:ev.zone || null, zoneLabel:z ? z.label : null, alert:!!ev.always });
   }
   if(n.onResolve) n.onResolve(S);
+  advanceMessageNight(n.day);
   const unmonitored = HOUSE.zones.length - S.armed.length;
   S.log.unshift({ date:n.date, day:n.day, entries, unmonitored });
   S.lastSummary = { date:n.date, count:entries.length, unmonitored, note:MORNINGS[n.day] || '' };
@@ -400,7 +401,7 @@ function closeSheet(){ document.getElementById('sheet').hidden = true; }
 
 /* ---------- shell ---------- */
 
-const TITLES = { home:'Home', activity:'Activity', cameras:'Cameras', settings:'Settings' };
+const TITLES = { home:'Home', activity:'Activity', cameras:'Cameras', messages:'Messages', settings:'Settings' };
 
 function render(){
   document.getElementById('barTitle').textContent = TITLES[tab];
@@ -408,6 +409,7 @@ function render(){
   if(tab === 'home') sub.textContent = S.night > NIGHTS.length ? HOUSE.address : 'Night ' + S.night + ' · ' + NIGHTS[S.night - 1].date;
   else if(tab === 'activity') sub.textContent = S.log.length ? 'Last 7 days' : '';
   else if(tab === 'cameras') sub.textContent = feedList().length + ' cameras online';
+  else if(tab === 'messages') sub.textContent = CONTACT.name;
   else sub.textContent = '';
 
   const scr = document.getElementById('screen');
@@ -415,11 +417,15 @@ function render(){
   scr.appendChild(
     tab === 'home' ? screenHome() :
     tab === 'activity' ? screenActivity() :
-    tab === 'cameras' ? screenCameras() : screenSettings()
+    tab === 'cameras' ? screenCameras() :
+    tab === 'messages' ? screenMessages() : screenSettings()
   );
   for(const b of document.querySelectorAll('.tab')) b.classList.toggle('sel', b.dataset.tab === tab);
   const selChip = document.querySelector('.camchips .sel');
   if(selChip) selChip.scrollIntoView({ block:'nearest', inline:'center' });
+  const badge = document.getElementById('msgBadge');
+  if(badge) badge.hidden = !(tab !== 'messages' && unreadMessages());
+  if(tab === 'messages') openMessages();
   window.scrollTo(0, 0);
 }
 
