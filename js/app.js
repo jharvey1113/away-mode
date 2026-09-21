@@ -9,7 +9,7 @@ let S, tab = 'home', busy = false;
    ?dev=1 collapses both so the whole arc can be walked in a few minutes. */
 const DEV = /[?&]dev=1/.test(location.search);
 const MINUTE = DEV ? 700 : 60000;
-const NIGHT_COOLDOWN = DEV ? 12000 : 4 * 60 * 60 * 1000;
+const NIGHT_COOLDOWN = 0;
 
 function nameFill(text){ return (text || '').replace(/\{name\}/g, S && S.name ? S.name : 'you'); }
 
@@ -197,6 +197,11 @@ function screenHome(){
 
 function screenActivity(){
   const wrap = document.createDocumentFragment();
+  if(S.log.length && S.log[0].captures){
+    const b = el('button', 'btn primary', 'Review last night’s captures');
+    b.addEventListener('click', () => { S.reviewIdx = 0; save(); tab = 'review'; render(); });
+    wrap.appendChild(b);
+  }
   if(!S.log.length){
     const c = el('div', 'card');
     const p = el('div', 'card-pad');
@@ -243,6 +248,7 @@ function screenActivity(){
 
 function lastStillFor(zoneId){
   for(const g of S.log){
+    if(g.captures && g.captures[zoneId]) return { still:g.captures[zoneId], t:'', date:g.date };
     for(const e of g.entries){
       if(e.zone === zoneId && e.still) return { still:e.still, t:e.t, date:g.date };
     }
@@ -473,6 +479,87 @@ function screenBrief(){
   return wrap;
 }
 
+
+/* Morning review. Six frames, one at a time, with a press-and-hold compare
+   against the night-one baseline. Reporting a frame is what opens the subject
+   with Maya - finding the anomaly is not scored, it just buys you the
+   conversation. Miss it and you simply never have that exchange. */
+function screenReview(){
+  const wrap = document.createDocumentFragment();
+  const grp = S.log[0];
+  if(!grp || !grp.captures){
+    const c = el('div','card'); const p = el('div','card-pad');
+    p.appendChild(el('div','muted','Nothing to review yet.'));
+    c.appendChild(p); wrap.appendChild(c); return wrap;
+  }
+  const cams = HOUSE.zones.filter(z => z.kind === 'camera');
+  if(S.reviewIdx >= cams.length) S.reviewIdx = cams.length - 1;
+  const cam = cams[S.reviewIdx];
+  const shot = grp.captures[cam.id];
+  const base = BASELINE[cam.id];
+  const isBase = shot === base;
+
+  const card = el('div','card');
+  const holder = el('div');
+  holder.id = 'reviewFeed';
+  holder.appendChild(feedTile(shot, grp.date, cam.label));
+  card.appendChild(holder);
+
+  const nav = el('div','camnav');
+  const prev = el('button','navbtn','‹');
+  prev.setAttribute('aria-label','Previous camera');
+  prev.disabled = S.reviewIdx === 0;
+  prev.addEventListener('click', () => { S.reviewIdx--; save(); render(); });
+  const mid = el('div','grow');
+  mid.style.textAlign = 'center';
+  mid.appendChild(el('div','lab', cam.label));
+  mid.appendChild(el('div','sub', (S.reviewIdx + 1) + ' of ' + cams.length));
+  const next = el('button','navbtn','›');
+  next.setAttribute('aria-label','Next camera');
+  next.disabled = S.reviewIdx === cams.length - 1;
+  next.addEventListener('click', () => { S.reviewIdx++; save(); render(); });
+  nav.appendChild(prev); nav.appendChild(mid); nav.appendChild(next);
+  card.appendChild(nav);
+  wrap.appendChild(card);
+
+  const hold = el('button','btn','Hold to compare with baseline');
+  const swapIn = () => {
+    holder.innerHTML = '';
+    holder.appendChild(feedTile(base, 'Baseline', cam.label));
+  };
+  const swapOut = () => {
+    holder.innerHTML = '';
+    holder.appendChild(feedTile(shot, grp.date, cam.label));
+  };
+  for(const ev of ['mousedown','touchstart']) hold.addEventListener(ev, e => { e.preventDefault(); swapIn(); });
+  for(const ev of ['mouseup','mouseleave','touchend','touchcancel']) hold.addEventListener(ev, swapOut);
+  if(!isBase || true) wrap.appendChild(hold);
+
+  const done = (S.reported || []).includes(cam.id);
+  const rep = el('button', 'btn' + (done ? '' : ' primary'), done ? 'Reported to owner' : 'Report something wrong here');
+  rep.disabled = done;
+  rep.addEventListener('click', () => {
+    S.reported = (S.reported || []).concat([cam.id]);
+    save();
+    queueReport(cam, grp);
+    render();
+  });
+  wrap.appendChild(rep);
+
+  if(S.reviewIdx === cams.length - 1){
+    const fin = el('button','btn ghost','Finish review');
+    fin.addEventListener('click', () => { tab = 'activity'; render(); });
+    wrap.appendChild(fin);
+  }
+
+  const note = el('div','dim');
+  note.style.fontSize = '12px';
+  note.style.textAlign = 'center';
+  note.textContent = 'Compare against the first night. Report anything that changed.';
+  wrap.appendChild(note);
+  return wrap;
+}
+
 /* ---------- night resolution ---------- */
 
 function confirmAway(){
@@ -499,7 +586,7 @@ function runNight(){
   scr.appendChild(panel);
 
   setTimeout(() => { big.textContent = 'Monitoring'; sm.textContent = '00:00 — 06:00'; }, 1400);
-  setTimeout(() => { resolveNight(); busy = false; tab = 'activity'; render(); showMorning(); }, 3000);
+  setTimeout(() => { resolveNight(); busy = false; tab = 'review'; render(); }, 3000);
 }
 
 function resolveNight(){
@@ -516,7 +603,10 @@ function resolveNight(){
   if(n.onResolve) n.onResolve(S);
   advanceMessageNight(n.day);
   const unmonitored = HOUSE.zones.length - S.armed.length;
-  S.log.unshift({ date:n.date, day:n.day, entries, unmonitored });
+  S.captures = Object.assign({}, n.captures);
+  S.reviewIdx = 0;
+  S.reported = [];
+  S.log.unshift({ date:n.date, day:n.day, entries, unmonitored, captures:S.captures, anomaly:n.anomaly });
   S.lastSummary = { date:n.date, count:entries.length, unmonitored, note:MORNINGS[n.day] || '' };
   S.night++;
   S.armed = [];
@@ -554,7 +644,7 @@ function closeSheet(){ document.getElementById('sheet').hidden = true; }
 
 /* ---------- shell ---------- */
 
-const TITLES = { home:'Home', activity:'Activity', cameras:'Cameras', messages:'Messages', settings:'Settings' };
+const TITLES = { home:'Home', activity:'Activity', review:'Morning review', cameras:'Cameras', messages:'Messages', settings:'Settings' };
 
 function render(){
   const setup = !S.name || !S.brief;
@@ -581,6 +671,7 @@ function render(){
   else if(tab === 'activity') sub.textContent = S.log.length ? 'Last 7 days' : '';
   else if(tab === 'cameras') sub.textContent = feedList().length + ' cameras online';
   else if(tab === 'messages') sub.textContent = CONTACT.name;
+  else if(tab === 'review') sub.textContent = S.log[0] ? S.log[0].date : '';
   else sub.textContent = '';
 
   const scr = document.getElementById('screen');
@@ -588,6 +679,7 @@ function render(){
   scr.appendChild(
     tab === 'home' ? screenHome() :
     tab === 'activity' ? screenActivity() :
+    tab === 'review' ? screenReview() :
     tab === 'cameras' ? screenCameras() :
     tab === 'messages' ? screenMessages() : screenSettings()
   );
