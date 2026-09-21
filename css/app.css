@@ -151,3 +151,4 @@ svg.plan{display:block;width:100%;height:auto;background:#101316}
   #app{border-left:1px solid var(--line);border-right:1px solid var(--line);background:var(--bg);min-height:100vh}
   #tabs{left:50%;transform:translateX(-50%);border-left:1px solid var(--line);border-right:1px solid var(--line)}
 }
+.sheet[hidden]{display:none}
