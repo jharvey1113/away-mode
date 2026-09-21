@@ -63,6 +63,20 @@ The player enters a name. It fills the `Account holder` row in Settings, is
 substituted into `{name}` tokens in the owner thread, and never leaves
 `localStorage`.
 
+## Deploying
+
+```
+./tools/release.sh "what changed"
+```
+
+GitHub Pages serves everything with `Cache-Control: max-age=600`, so a browser
+will keep running the old JS and CSS for ten minutes after a push. The release
+script stamps the asset URLs with the commit hash, so the new files load as
+soon as the browser picks up a fresh `index.html`. Deploy with it rather than a
+bare `git push`.
+
+Live at https://jharvey1113.github.io/away-mode/
+
 ## Layout
 
 ```
