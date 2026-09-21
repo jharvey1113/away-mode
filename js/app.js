@@ -21,7 +21,7 @@ function untilText(ms){
 }
 
 function fresh(){
-  return { night:1, name:'', armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
+  return { night:1, name:'', brief:false, armed:[], locks:{front:false,back:false,garage:false}, log:[], flags:{},
            lastSummary:null, camIndex:0, camSwitches:0, nextNightAt:0 };
 }
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
@@ -164,6 +164,13 @@ function screenHome(){
     });
     r.appendChild(sw);
     sr.appendChild(r);
+  }
+  if(S.night === 1 && !S.log.length){
+    const tip = el('div', 'card-pad');
+    tip.style.borderBottom = '1px solid var(--line)';
+    tip.style.fontSize = '13px';
+    tip.appendChild(el('div', 'muted', 'Pick the ' + HOUSE.slots + ' zones you want recording tonight. Anything you leave off will not report.'));
+    sens.insertBefore(tip, sr);
   }
   sens.appendChild(sr);
   wrap.appendChild(sens);
@@ -324,6 +331,23 @@ function screenSettings(){
   rows.appendChild(mk('Plan', 'Hearthwatch Basic · 3 active sensors'));
   rows.appendChild(mk('Devices paired', String(HOUSE.zones.length + (S.flags.extraRoom ? 1 : 0))));
   rows.appendChild(mk('Account holder', S.name || '—'));
+  const howRow = mk('How monitoring works', 'Plan details and what gets recorded');
+  howRow.style.cursor = 'pointer';
+  howRow.appendChild(el('div', 'muted', '›'));
+  howRow.addEventListener('click', () => {
+    const card = document.getElementById('sheetCard');
+    card.innerHTML = '';
+    card.appendChild(el('h3', null, 'How monitoring works'));
+    card.appendChild(briefList());
+    const box = el('div', 'sheet-actions');
+    box.style.marginTop = '14px';
+    const b = el('button', 'btn primary', 'Close');
+    b.addEventListener('click', closeSheet);
+    box.appendChild(b);
+    card.appendChild(box);
+    document.getElementById('sheet').hidden = false;
+  });
+  rows.appendChild(howRow);
   c.appendChild(rows);
   wrap.appendChild(c);
 
@@ -406,6 +430,46 @@ function screenSetup(){
 
   c.appendChild(p);
   wrap.appendChild(c);
+  return wrap;
+}
+
+
+const BRIEF = [
+  ['You are monitoring this property remotely',
+   'The owners are away until Sunday. You will not be on site at any point — everything happens through this app.'],
+  ['Your plan covers 3 active zones',
+   'There are 10 sensors at the property and your plan monitors 3 at a time. Choose which before each night. Inactive zones do not record, and nothing from them appears in your activity log.'],
+  ['Doors are always monitored',
+   'The four door contacts are part of the lock hardware and report regardless of which zones you select.'],
+  ['Set away mode to begin the night',
+   'Once away mode is on, your selection is locked until morning and live view is disabled. Your summary is ready when monitoring ends.']
+];
+
+function briefList(){
+  const box = el('div', 'rows');
+  for(const [h, b] of BRIEF){
+    const r = el('div', 'row');
+    const g = el('div', 'grow');
+    g.appendChild(el('div', 'lab', h));
+    g.appendChild(el('div', 'sub', b));
+    r.appendChild(g);
+    box.appendChild(r);
+  }
+  return box;
+}
+
+function screenBrief(){
+  const wrap = document.createDocumentFragment();
+  const c = el('div', 'card');
+  const h = el('div', 'card-head');
+  h.appendChild(el('h2', null, 'How monitoring works'));
+  c.appendChild(h);
+  c.appendChild(briefList());
+  wrap.appendChild(c);
+
+  const go = el('button', 'btn primary', 'Start monitoring');
+  go.addEventListener('click', () => { S.brief = true; save(); render(); });
+  wrap.appendChild(go);
   return wrap;
 }
 
@@ -493,8 +557,16 @@ function closeSheet(){ document.getElementById('sheet').hidden = true; }
 const TITLES = { home:'Home', activity:'Activity', cameras:'Cameras', messages:'Messages', settings:'Settings' };
 
 function render(){
-  const setup = !S.name;
+  const setup = !S.name || !S.brief;
   document.getElementById('tabs').hidden = setup;
+  if(S.name && !S.brief){
+    document.getElementById('barTitle').textContent = 'Hearthwatch';
+    document.getElementById('barSub').textContent = HOUSE.address;
+    const scrB = document.getElementById('screen');
+    scrB.innerHTML = '';
+    scrB.appendChild(screenBrief());
+    return;
+  }
   if(setup){
     document.getElementById('barTitle').textContent = 'Hearthwatch';
     document.getElementById('barSub').textContent = HOUSE.address;

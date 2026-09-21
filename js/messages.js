@@ -13,7 +13,9 @@ const CONTACT = { name: 'Maya R.', sub: 'Property owner' };
 
 const MSG = {
   1: [
-    { from:'maya', mins:1, t:'21:12', text:'Sorry to bug you again. Camera says motion out front. Can you check?' },
+    { from:'maya', mins:1, t:'20:56', text:'Hi {name} — thanks again for keeping an eye on the place this week. We land Sunday.' },
+    { from:'maya', mins:1, t:'20:57', text:'If the app flags anything just take a look and tell me what you see. It’s always nothing but it makes me feel better.' },
+    { from:'maya', mins:2, t:'21:12', text:'Sorry to bug you again. Camera says motion out front. Can you check?' },
     { choices:['Package.', 'Nothing there.'] },
     { from:'maya', mins:2, t:'21:13', text:'👍 Thanks. That’s probably Daniel’s.' },
     { from:'maya', mins:11, t:'21:24', text:'Kitchen one went off now.' },
