@@ -1,4 +1,5 @@
 raw/
+raw_sheets/
 __pycache__/
 *.pyc
 .DS_Store
