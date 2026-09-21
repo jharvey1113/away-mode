@@ -170,7 +170,7 @@ function screenHome(){
     tip.style.borderBottom = '1px solid var(--line)';
     tip.style.fontSize = '13px';
     tip.appendChild(el('div', 'muted', 'Pick the ' + HOUSE.slots + ' zones you want recording tonight. Anything you leave off will not report.'));
-    sens.insertBefore(tip, sr);
+    sens.appendChild(tip);
   }
   sens.appendChild(sr);
   wrap.appendChild(sens);
