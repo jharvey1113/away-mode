@@ -62,14 +62,14 @@ const MSG = {
 
 /* What Maya says when you report a camera from the morning review. */
 const REPORTS = {
-  porch:   [{ from:'maya', mins:3, text:'That’s the package. Daniel finally admitted it’s a birdfeeder.' }],
-  entry:   [{ from:'maya', mins:5, text:'The coats? We left in a hurry, that’s probably us.' },
+  porch:   [{ from:'maya', mins:1, text:'That’s the package. Daniel finally admitted it’s a birdfeeder.' }],
+  entry:   [{ from:'maya', mins:1, text:'The coats? We left in a hurry, that’s probably us.' },
             { from:'maya', mins:4, text:'Although the closet was shut when we locked up. I’m fairly sure.' }],
-  kitchen: [{ from:'maya', mins:4, text:'Which cabinet? Daniel leaves the one over the kettle open constantly.' },
+  kitchen: [{ from:'maya', mins:1, text:'Which cabinet? Daniel leaves the one over the kettle open constantly.' },
             { from:'maya', mins:6, text:'He says he didn’t this time, but he said that last time too.' }],
-  living:  [{ from:'maya', mins:7, text:'Nothing should be on the floor in there. We had it cleaned before we left.' }],
-  utility: [{ from:'maya', mins:8, text:'That room should be completely empty. What are you seeing?' }],
-  hall_up: [{ from:'maya', mins:6, text:'All of those doors were shut. I did them myself.' }]
+  living:  [{ from:'maya', mins:2, text:'Nothing should be on the floor in there. We had it cleaned before we left.' }],
+  utility: [{ from:'maya', mins:2, text:'That room should be completely empty. What are you seeing?' }],
+  hall_up: [{ from:'maya', mins:2, text:'All of those doors were shut. I did them myself.' }]
 };
 
 /* ---------- state ---------- */
@@ -203,9 +203,10 @@ function sendReply(choice){
 function queueReport(cam, grp){
   const m = msgState();
   pushMine('[Photo — ' + cam.label.toLowerCase() + ', ' + grp.date + '] Something’s different here.');
-  m.queue = m.queue.concat(REPORTS[cam.id] || [
-    { from:'maya', mins:5, text:'Thanks for flagging. I’ll ask Daniel.' }
-  ]);
+  m.queue = (REPORTS[cam.id] || [
+    { from:'maya', mins:1, text:'Thanks for flagging. I’ll ask Daniel.' }
+  ]).concat(m.queue);
+  m.dueAt = 0;
   save();
   runMessages();
 }

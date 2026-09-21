@@ -543,6 +543,10 @@ function screenReview(){
     save();
     queueReport(cam, grp);
     render();
+    const t = el('div','dim');
+    t.style.cssText='font-size:12px;text-align:center;margin-top:-4px';
+    t.textContent='Sent to Maya. She usually replies within a minute or two.';
+    document.getElementById('screen').appendChild(t);
   });
   wrap.appendChild(rep);
 
