@@ -169,7 +169,7 @@ function screenHome(){
     const tip = el('div', 'card-pad');
     tip.style.borderBottom = '1px solid var(--line)';
     tip.style.fontSize = '13px';
-    tip.appendChild(el('div', 'muted', 'Pick the ' + HOUSE.slots + ' zones you want recording tonight. Anything you leave off will not report.'));
+    tip.appendChild(el('div', 'muted', 'Your first night is a free trial — all ten zones will report. From tomorrow your plan covers ' + HOUSE.slots + ', and anything you leave off records nothing at all.'));
     sens.appendChild(tip);
   }
   sens.appendChild(sr);
@@ -594,7 +594,7 @@ function resolveNight(){
   const entries = [];
   for(const ev of n.events){
     if(ev.effect) ev.effect(S);
-    const visible = ev.contact || ev.always || S.armed.includes(ev.zone);
+    const visible = ev.contact || ev.always || n.allZones || S.armed.includes(ev.zone);
     if(!visible) continue;
     const z = zoneById(ev.zone);
     entries.push({ t:ev.t, text:ev.text, meta:ev.meta || ev.note || null, still:ev.still || null,
@@ -602,7 +602,7 @@ function resolveNight(){
   }
   if(n.onResolve) n.onResolve(S);
   advanceMessageNight(n.day);
-  const unmonitored = HOUSE.zones.length - S.armed.length;
+  const unmonitored = n.allZones ? 0 : HOUSE.zones.length - S.armed.length;
   S.captures = Object.assign({}, n.captures);
   S.reviewIdx = 0;
   S.reported = [];

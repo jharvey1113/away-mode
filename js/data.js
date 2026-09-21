@@ -46,13 +46,15 @@ const ROOMS = {
    something moved and where. You always see the evidence, you choose how much
    of the story around it you get. */
 const NIGHTS = [
-  { day:1, date:'Tue 4 Nov',
+  { day:1, date:'Tue 4 Nov', allZones:true,
     captures:{ porch:'porch_b', entry:'entry_a', kitchen:'kitchen_a', living:'living_a', utility:'utility_a', hall_up:'hall_a' },
     anomaly:'porch',
     events:[
       { t:'21:41', zone:'yard',    text:'Motion detected — side yard' },
+      { t:'21:23', zone:'kitchen', text:'Motion detected — kitchen' },
       { t:'23:08', zone:'porch',   text:'Motion detected — front porch' },
-      { t:'23:09', zone:'porch',   text:'Motion cleared — front porch' }
+      { t:'23:09', zone:'porch',   text:'Motion cleared — front porch' },
+      { t:'05:14', zone:'stairs',  text:'Motion detected — stairs' }
     ]},
 
   { day:2, date:'Wed 5 Nov',
